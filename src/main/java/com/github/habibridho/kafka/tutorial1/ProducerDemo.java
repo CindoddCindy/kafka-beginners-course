@@ -19,11 +19,14 @@ public class ProducerDemo {
         KafkaProducer<String, String> producer = new KafkaProducer<String, String>(properties);
 
         for (int i=0; i<10; i++) {
-            ProducerRecord<String, String> record = new ProducerRecord<String, String>("first_topic", "Message produced from java " + i);
+            String topic = "first_topic";
+            String key = "id_" + i;
+            String value = "Message produced from java " + i;
+            ProducerRecord<String, String> record = new ProducerRecord<String, String>(topic, key, value);
             producer.send(record, (metadata, exception) -> {
                 if (exception == null) {
-                    logger.info(String.format("Topic: %s\nPartition: %s\nOffset: %s\nTimestamp: %s",
-                            metadata.topic(), metadata.partition(), metadata.offset(), metadata.timestamp()));
+                    logger.info(String.format("Topic: %s\nKey: %s\nPartition: %s\nOffset: %s\nTimestamp: %s",
+                            metadata.topic(), key, metadata.partition(), metadata.offset(), metadata.timestamp()));
                 } else {
                     logger.error("Error producing message", exception);
                 }
