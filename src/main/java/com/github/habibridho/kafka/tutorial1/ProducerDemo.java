@@ -1,15 +1,16 @@
 package com.github.habibridho.kafka.tutorial1;
 
-import org.apache.kafka.clients.producer.KafkaProducer;
-import org.apache.kafka.clients.producer.ProducerConfig;
-import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.clients.producer.*;
 import org.apache.kafka.common.serialization.StringSerializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Properties;
 
 public class ProducerDemo {
 
     public static void main(String[] args) {
+        Logger logger = LoggerFactory.getLogger(ProducerDemo.class);
         Properties properties = new Properties();
         properties.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
         properties.setProperty(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
@@ -17,8 +18,18 @@ public class ProducerDemo {
 
         KafkaProducer<String, String> producer = new KafkaProducer<String, String>(properties);
 
-        ProducerRecord<String, String> record = new ProducerRecord<String, String>("first_topic", "First message produced from java");
-        producer.send(record);
+        for (int i=0; i<10; i++) {
+            ProducerRecord<String, String> record = new ProducerRecord<String, String>("first_topic", "Message produced from java " + i);
+            producer.send(record, (metadata, exception) -> {
+                if (exception == null) {
+                    logger.info(String.format("Topic: %s\nPartition: %s\nOffset: %s\nTimestamp: %s",
+                            metadata.topic(), metadata.partition(), metadata.offset(), metadata.timestamp()));
+                } else {
+                    logger.error("Error producing message", exception);
+                }
+            });
+        }
+
         producer.flush();
         producer.close();
     }
